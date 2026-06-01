@@ -251,21 +251,6 @@ llm = get_llm("GPT-4o (OpenAI)")      # add to settings.py
 llm = get_llm("Claude Sonnet (Anthropic)")  # add to settings.py
 ```
 
----
-
-## 📄 Assignment Context
-
-Built as Part 2 (Prototype) of the Webvory AI Researcher / AI Innovation Engineer technical assignment. Parts 1 and 3 cover tool evaluation and architectural recommendations respectively.
-
-**Evaluation criteria addressed:**
-- ✅ Research depth — 6 tools evaluated across orchestration, agent, and inference layers
-- ✅ Practical AI understanding — Working RAG system with 4-node LangGraph pipeline
-- ✅ Prototype quality — Multi-tab Streamlit app with full feature set
-- ✅ Architecture thinking — Model-agnostic design with clear production upgrade path
-- ✅ Business impact — 80–88% cost reduction vs frontier-only stack
-- ✅ Bonus: RAG system · Multi-model workflow · Real API integrations · Cost optimisation
-
----
 
 ## 👤 Author
 
