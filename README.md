@@ -30,6 +30,14 @@ Built for the Webvory AI Researcher / AI Innovation Engineer technical assignmen
 
 ---
 
+## 🚀 Live Demo
+
+🔗 **Streamlit Application:**  
+[Launch AI Research Assistant](https://ai-research-assistant-txhimtfzk6gstt2xmjrzid.streamlit.app/)
+
+---
+
+
 ## ✨ Features
 
 | Feature | Details |
