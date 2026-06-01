@@ -1,0 +1,25 @@
+# Virtual environment — never push this
+venv/
+
+# API keys — never push this
+.env
+
+# ChromaDB vector store — too large, rebuild on deploy
+data/vectorstore/
+
+# Uploaded files
+data/uploads/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
