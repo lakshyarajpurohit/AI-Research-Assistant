@@ -148,9 +148,33 @@ def get_retriever(top_k: int = 6):
 
 def get_vectorstore_stats() -> dict:
     try:
-        return {"total_chunks": _get_or_create_vectorstore()._collection.count(), "status": "active"}
-    except Exception:
-        return {"total_chunks": 0, "status": "empty"}
+        collection = _get_or_create_vectorstore()._collection
+
+        total_chunks = collection.count()
+
+        data = collection.get()
+
+        unique_docs = len(
+            set(
+                meta.get("source", "Unknown")
+                for meta in data.get("metadatas", [])
+            )
+        )
+
+        return {
+            "total_chunks": total_chunks,
+            "total_documents": unique_docs,
+            "status": "active"
+        }
+
+    except Exception as e:
+        print(f"Vectorstore stats error: {e}")
+
+        return {
+            "total_chunks": 0,
+            "total_documents": 0,
+            "status": "empty"
+        }
 
 
 def clear_vectorstore():

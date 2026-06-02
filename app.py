@@ -127,35 +127,56 @@ with tab_chat:
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_summarize:
     st.markdown("### 📋 Document Summarizer")
-    st.caption(
-        "Paste any document text below for an instant structured summary "
-        "using Gemini 2.5 Flash's 1M token context window."
+    st.caption("Paste any document text below for an instant structured summary.")
+
+    # Main Document Inputs
+    doc_text = st.text_area(
+        "Paste document text here",
+        height=250,
+        placeholder="Paste your research paper, article, or report text here...",
     )
 
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        doc_text = st.text_area(
-            "Paste document text here",
-            height=250,
-            placeholder="Paste your research paper, article, or report text here...",
-        )
-        doc_name = st.text_input("Document name (optional)", value="Research Paper")
+    doc_name = st.text_input(
+        "Document name (optional)",
+        value="Research Paper"
+    )
 
-    with col2:
-        st.markdown("#### Options")
-        st.caption("Model: Gemini 2.5 Flash (1M context — handles full papers)")
-        if st.button("📋 Summarize", type="primary", disabled=not doc_text):
-            with st.spinner("Summarizing with Gemini Flash..."):
-                summary = summarize_document(doc_text, doc_name)
-            st.markdown("---")
-            st.markdown("### Summary")
-            st.markdown(summary)
-            st.download_button(
-                "⬇️ Download Summary",
-                data=summary,
-                file_name=f"summary_{doc_name[:20].replace(' ','_')}.md",
-                mime="text/markdown",
-            )
+    st.markdown("#### Options")
+    st.caption(
+        "Model Execution Context: Llama 3.3 70B via Gemini Flash Assistant Workflow"
+    )
+
+    # Generate Summary
+    if st.button(
+        "📋 Summarize Document",
+        type="primary",
+        disabled=not doc_text
+    ):
+        with st.spinner("Summarizing with Gemini Flash..."):
+            summary = summarize_document(doc_text, doc_name)
+
+        st.session_state["generated_summary"] = summary
+        st.session_state["generated_doc_name"] = doc_name
+
+    # FULL WIDTH SUMMARY BELOW DOCUMENT NAME
+    if "generated_summary" in st.session_state:
+
+        st.markdown("---")
+
+        st.markdown(
+            f"## 📄 Summary: {st.session_state['generated_doc_name']}"
+        )
+
+        with st.container(border=True):
+            st.markdown(st.session_state["generated_summary"])
+
+        st.download_button(
+            "⬇️ Download Summary",
+            data=st.session_state["generated_summary"],
+            file_name=f"summary_{st.session_state['generated_doc_name'][:20].replace(' ','_')}.md",
+            mime="text/markdown",
+            use_container_width=True,
+        )
 
     st.divider()
 
@@ -170,28 +191,45 @@ with tab_summarize:
         st.session_state.synthesis_docs = []
 
     s_col1, s_col2 = st.columns([2, 1])
+
     with s_col1:
         syn_name = st.text_input("Document name", key="syn_name")
-        syn_text = st.text_area("Summary text", height=120, key="syn_text")
+        syn_text = st.text_area(
+            "Summary text",
+            height=120,
+            key="syn_text"
+        )
+
     with s_col2:
         st.markdown(" ")
+
         if st.button("➕ Add to synthesis") and syn_text:
             st.session_state.synthesis_docs.append(
-                {"name": syn_name or f"Doc {len(st.session_state.synthesis_docs)+1}",
-                 "summary": syn_text}
+                {
+                    "name": syn_name or f"Doc {len(st.session_state.synthesis_docs)+1}",
+                    "summary": syn_text,
+                }
             )
             st.success("Added!")
 
     if st.session_state.synthesis_docs:
+
         st.markdown(
             f"**{len(st.session_state.synthesis_docs)} document(s) queued:** "
-            + ", ".join(d["name"] for d in st.session_state.synthesis_docs)
+            + ", ".join(
+                d["name"] for d in st.session_state.synthesis_docs
+            )
         )
-        if st.button("🔗 Run Cross-Document Synthesis", type="primary"):
+
+        if st.button(
+            "🔗 Run Cross-Document Synthesis",
+            type="primary"
+        ):
             with st.spinner("Synthesizing across documents..."):
                 synthesis = generate_cross_document_synthesis(
                     st.session_state.synthesis_docs
                 )
+
             st.markdown("---")
             st.markdown(synthesis)
 
@@ -212,8 +250,10 @@ with tab_compare:
 
     model_list = list(MODELS.keys())
     c1, c2 = st.columns(2)
+
     with c1:
         model_a = st.selectbox("Model A", model_list, index=0, key="cmp_a")
+
     with c2:
         model_b = st.selectbox("Model B", model_list, index=2, key="cmp_b")
 
@@ -223,87 +263,125 @@ with tab_compare:
         with col_a:
             st.markdown(f"#### 🤖 {model_a.split('—')[0].strip()}")
             with st.spinner(f"Running {model_a.split()[0]}..."):
-                res_a = run_research_query(cmp_query, use_web_search=use_web, model_name=model_a)
+                res_a = run_research_query(
+                    cmp_query,
+                    use_web_search=use_web,
+                    model_name=model_a
+                )
             render_answer(res_a)
 
         with col_b:
             st.markdown(f"#### 🤖 {model_b.split('—')[0].strip()}")
             with st.spinner(f"Running {model_b.split()[0]}..."):
-                res_b = run_research_query(cmp_query, use_web_search=use_web, model_name=model_b)
+                res_b = run_research_query(
+                    cmp_query,
+                    use_web_search=use_web,
+                    model_name=model_b
+                )
             render_answer(res_b)
 
         # Score comparison
         st.divider()
         st.markdown("#### 📊 Comparison Summary")
+
         m1, m2, m3 = st.columns(3)
-        m1.metric("Model A Confidence", f"{res_a.get('confidence',0):.0%}")
-        m2.metric("Model B Confidence", f"{res_b.get('confidence',0):.0%}")
+
+        m1.metric(
+            "Model A Confidence",
+            f"{res_a.get('confidence',0):.0%}"
+        )
+
+        m2.metric(
+            "Model B Confidence",
+            f"{res_b.get('confidence',0):.0%}"
+        )
+
         m3.metric(
             "Citations",
             f"A: {len(res_a.get('citations',[]))} · B: {len(res_b.get('citations',[]))}",
         )
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 4: PIPELINE INSPECTOR
+# TAB 4: PIPELINE INSPECTOR (MODIFIED FULL-WIDTH LAYOUT)
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_pipeline:
     st.markdown("### 🔧 LangGraph Pipeline Inspector")
+    st.caption(
+        "Detailed structural routing maps executing across current multi-agent execution graphs."
+    )
 
-    st.markdown("""
-```
-[User Query]
-     │
-     ▼
-┌─────────────────────────────────────────────┐
-│  Node 1: retrieve_node                      │
-│  ChromaDB MMR retrieval (top-6 chunks)      │
-│  Embedding: all-MiniLM-L6-v2 (local/free)  │
-└──────────────────────┬──────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────┐
-│  Node 2: web_search_node                    │
-│  Tavily API (if enabled in sidebar)         │
-│  Returns top-5 live web results             │
-└──────────────────────┬──────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────┐
-│  Node 3: synthesize_node                    │
-│  Model: Gemini 2.5 Flash (1M context)       │
-│  Generates cited answer from all sources    │
-└──────────────────────┬──────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────┐
-│  Node 4: critic_node                        │
-│  Model: Groq LLaMA 3.3 70B (fast)          │
-│  Validates answer, scores confidence 0–1    │
-│  Returns improved answer if issues found   │
-└──────────────────────┬──────────────────────┘
-                       │
-                       ▼
-             [Final Response]
-     answer + citations + confidence + critique
-```
+    # Full-width card for Pipeline Flow Chart
+    with st.container(border=True):
+        st.markdown("#### 🗺️ Active Node Mapping Architecture")
+
+        st.markdown("""
+[User Query Input Source]
+│
+▼
+┌───────────────────────────────────────────────────────────────────────────────────────┐
+│  Node 1: retrieve_node                                                                │
+│  ChromaDB MMR retrieval engine extracting maximum relevance contexts (top-6 chunks)   │
+│  Embedding Space Model Execution: all-MiniLM-L6-v2 (local/free footprint)             │
+└──────────────────────────────────────────┬────────────────────────────────────────────┘
+│
+▼
+┌───────────────────────────────────────────────────────────────────────────────────────┐
+│  Node 2: web_search_node                                                              │
+│  Tavily Search API Extraction Routine (Conditional deployment based on configurations)│
+│  Compiles top-5 live browser payload entries directly into pipeline state             │
+└──────────────────────────────────────────┬────────────────────────────────────────────┘
+│
+▼
+┌───────────────────────────────────────────────────────────────────────────────────────┐
+│  Node 3: synthesize_node                                                              │
+│  Core Orchestration Model: Gemini 2.5 Flash Native Pipeline Engine (1M token context) │
+│  Maps composite matrix metadata schemas to assemble unified citation-anchored output  │
+└──────────────────────────────────────────┬────────────────────────────────────────────┘
+│
+▼
+┌───────────────────────────────────────────────────────────────────────────────────────┐
+│  Node 4: critic_node                                                                  │
+│  Validation Evaluator Model: Groq LLaMA 3.3 70B (High-throughput parsing architecture)│
+│  Scans synthesis payloads against hallucination models, scoring confidence metric 0-1 │
+└──────────────────────────────────────────┬────────────────────────────────────────────┘
+│
+▼
+[Final Clean Output]
+
+answer + citations + confidence + critique
 """)
 
     st.divider()
+
+    # Metrics breakdown spread wide across the workspace
     st.markdown("#### 📊 Live Knowledge Base Stats")
+
     vs_stats = get_vectorstore_stats()
+
     s1, s2, s3 = st.columns(3)
+
     s1.metric("Total Chunks Indexed", vs_stats["total_chunks"])
-    s2.metric("Documents Ingested", len(st.session_state.ingested_docs))
-    s3.metric("Active Model", selected_model.split("—")[0].strip())
+    s2.metric("Documents Ingested", vs_stats.get("total_documents", 0))
+    s3.metric(
+        "Active Model Engine Target",
+        selected_model.split("—")[0].strip()
+    )
 
     st.divider()
-    st.markdown("#### 📈 Session Token Usage")
+
+    # Diagnostic Log Matrix Data Table
+    st.markdown("#### 📈 Session Token Usage Logs")
+
     tracker = st.session_state.get("cost_tracker")
+
     if tracker:
         summary = tracker.get_summary()
+
         if summary["calls"]:
             import pandas as pd
+
             df = pd.DataFrame(summary["calls"])
             st.dataframe(df, use_container_width=True)
+
         else:
             st.caption("No queries run yet this session.")
